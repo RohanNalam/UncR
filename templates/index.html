@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UncR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 414px;
+            margin: 0 auto;
+        }
+
+        .card-stack {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .card {
+            position: absolute;
+            width: 90%;
+            height: 85%;
+            left: 5%;
+            top: 5%;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            user-select: none;
+            overflow: hidden;
+            cursor: grab;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card.moving {
+            transition: none;
+            cursor: grabbing;
+        }
+
+        .card-content {
+            height: 100%;
+            position: relative;
+        }
+        
+        .card-heading {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.9);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            z-index: 1;
+            text-align: center;
+            width: 100%;
+            letter-spacing: -0.05em;
+            transition: all 0.3s ease;
+        }
+
+        .card-subheading {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            color: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+            text-align: center;
+            width: 100%;
+            letter-spacing: 0.03em;
+            line-height: 1.4;
+            max-width: 280px;
+            padding-top: 8px;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 80%;
+            object-fit: cover;
+            border-radius: 15px;
+            transform: scale(0.98);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .card:hover .card-image {
+            transform: scale(1);
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom,
+                rgba(255,255,255,0.2) 0%,
+                rgba(255,255,255,0.01) 50%,
+                rgba(0,0,0,0.03) 100%);
+            pointer-events: none;
+        }
+
+        .card-text {
+            padding: 20px;
+        }
+
+        .end-message {
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card-stack">
+            <!-- Cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        const cardsData = [
+            { heading: "UncR", subheading: "Swipe Left for No, Swipe Right for Yes", name: "", image: "https://upload.wikimedia.org/wikipedia/commons/5/59/Empty.png", description: ""},
+            { heading: "", subheading: "", name: "Suresh", image: "https://img.freepik.com/free-photo/indian-man-portrait-temple_53876-14535.jpg", description: "Loves feet" },
+            { heading: "", subheading: "", name: "Niggesh", image: "https://i0.wp.com/journals-times.com/wp-content/uploads/2023/09/Rajessh-M-Iyer-photo.png?fit=500%2C664&ssl=1", description: "likes little boys" },
+        ];
+
+        let currentCard = null;
+        let currentCardIndex = 0;
+        let startX = 0;
+        let startY = 0;
+        let currentX = 0;
+        let currentY = 0;
+        let isDragging = false;
+
+        function createCard(person, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.transform = `scale(${1 - index * 0.05}) translateY(${index * 10}px)`;
+            card.style.zIndex = cardsData.length - index;
+            card.innerHTML = `
+                <div class="card-content">
+                    <h1 class="card-heading">${person.heading}</h1>
+                    <p class="card-subheading">${person.subheading}</p>
+                    <img src="${person.image}" class="card-image" alt="${person.name}">
+                    <div class="card-text">
+                        <h2>${person.name}</h2>
+                        <p>${person.description}</p>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function initializeCards() {
+            const stack = document.querySelector('.card-stack');
+            cardsData.forEach((person, index) => {
+                stack.appendChild(createCard(person, index));
+            });
+            currentCard = stack.children[0];
+            addSwipeListeners(currentCard);
+        }
+
+        function addSwipeListeners(card) {
+            card.addEventListener('touchstart', startDrag);
+            card.addEventListener('touchmove', drag);
+            card.addEventListener('touchend', endDrag);
+            
+            // For desktop compatibility
+            card.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', endDrag);
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            currentCard.classList.add('moving');
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            startX = clientX;
+            startY = clientY;
+            currentX = clientX;
+            currentY = clientY;
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const deltaX = clientX - currentX;
+            const deltaY = clientY - currentY;
+            
+            currentX = clientX;
+            currentY = clientY;
+            
+            const offsetX = clientX - startX;
+            const offsetY = clientY - startY;
+            
+            updateCardPosition(offsetX, offsetY);
+        }
+
+        function updateCardPosition(offsetX, offsetY) {
+            const rotation = offsetX * 0.1;
+            const opacity = 1 - Math.abs(offsetX) / 300;
+            
+            currentCard.style.transform = `
+                translate(${offsetX}px, ${offsetY}px)
+                rotate(${rotation}deg)
+            `;
+            currentCard.style.opacity = opacity;
+        }
+
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+            currentCard.classList.remove('moving');
+            
+            const offsetX = currentX - startX;
+            const offsetY = currentY - startY;
+            
+            if (Math.abs(offsetX) > 100) {
+                swipeCard(offsetX > 0 ? 'right' : 'left');
+            } else {
+                resetCardPosition();
+            }
+        }
+
+        function swipeCard(direction) {
+            const screenWidth = window.innerWidth;
+            currentCard.style.transition = 'transform 0.5s, opacity 0.5s';
+            currentCard.style.transform = `
+                translateX(${direction === 'right' ? screenWidth : -screenWidth}px)
+                rotate(${direction === 'right' ? 30 : -30}deg)
+            `;
+            currentCard.style.opacity = 0;
+
+            setTimeout(() => {
+                currentCard.remove();
+                currentCardIndex++;
+                
+                const stack = document.querySelector('.card-stack');
+                if (currentCardIndex < cardsData.length) {
+                    currentCard = stack.children[0];
+                    currentCard.style.transform = 'translate(0, 0) rotate(0deg)';
+                    addSwipeListeners(currentCard);
+                } else {
+                    showEndMessage();
+                }
+            }, 300);
+        }
+
+        function resetCardPosition() {
+            currentCard.style.transition = 'transform 0.3s';
+            currentCard.style.transform = 'translate(0, 0) rotate(0deg)';
+            currentCard.style.opacity = 1;
+        }
+
+        function showEndMessage() {
+            const stack = document.querySelector('.card-stack');
+            stack.innerHTML = '<div class="end-message">No more people in your area!</div>';
+        }
+
+        // Initialize the app
+        initializeCards();
+    </script>
+</body>
+</html>

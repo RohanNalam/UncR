@@ -13,6 +13,7 @@ app = Flask(__name__)
 # Replace with your OpenRouter API endpoint and key
 OPENROUTER_API_URL = 'https://api.openrouter.ai/v1/chat'
 OPENROUTER_API_KEY = os.getenv("API_KEY")
+print(OPENROUTER_API_KEY)
 
 @app.route('/')
 def home():
@@ -33,7 +34,7 @@ def message_ai(message):
         "content": [
             {
             "type": "text",
-            "text": f"Here's the user's message[{message}] respond in a flirtatious way like you want to pursue a potential relationship."
+            "text": f"Here's the user's message[{message}] respond in a flirtatious way like you want to pursue a potential relationship. Utilize genZ slang"
             }
         ]
         }

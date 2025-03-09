@@ -150,6 +150,8 @@
         let currentX = 0;
         let currentY = 0;
         let isDragging = false;
+        let currentIndex = 0;
+        const swipedRightIndices = new Set();
 
         function createCard(person, index) {
             const card = document.createElement('div');
@@ -247,7 +249,49 @@
                 resetCardPosition();
             }
         }
+        function openChat(person) {
+            // Remove any existing chat window
+            closeChat();
 
+            // Create a new chat window
+            const chatWindow = document.createElement('div');
+            chatWindow.className = 'chat-window';
+            chatWindow.style.position = 'fixed';
+            chatWindow.style.top = '0';
+            chatWindow.style.left = '0';
+            chatWindow.style.width = '100vw';
+            chatWindow.style.height = '100vh';
+            chatWindow.style.backgroundColor = 'white';
+            chatWindow.style.zIndex = '1000';
+            chatWindow.style.display = 'flex';
+            chatWindow.style.flexDirection = 'column';
+
+            chatWindow.innerHTML = `
+                <div class="chat-header" style="padding: 10px; background-color: #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Chat with ${person.name}</h2>
+                    <button onclick="closeChat()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                </div>
+                <div class="chat-messages" style="flex-grow: 1; padding: 10px; overflow-y: auto;"></div>
+                <input type="text" class="chat-input" placeholder="Type a message..." style="padding: 10px; border: none; border-top: 1px solid #ccc;">
+            `;
+            document.body.appendChild(chatWindow);
+        }
+
+        function closeChat() {
+            const chatWindow = document.querySelector('.chat-window');
+            if (chatWindow) {
+                chatWindow.remove();
+            }
+            // Re-initialize the swiping interface without moving to the next card
+            const stack = document.querySelector('.card-stack');
+            if (currentCardIndex < cardsData.length) {
+                currentCard = stack.children[0];
+                currentCard.style.transform = 'translate(0, 0) rotate(0deg)';
+                addSwipeListeners(currentCard);
+            } else {
+                showEndMessage();
+            }
+        }
         function swipeCard(direction) {
             const screenWidth = window.innerWidth;
             currentCard.style.transition = 'transform 0.5s, opacity 0.5s';
@@ -258,18 +302,32 @@
             currentCard.style.opacity = 0;
 
             setTimeout(() => {
-                currentCard.remove();
-                currentCardIndex++;
-                
-                const stack = document.querySelector('.card-stack');
-                if (currentCardIndex < cardsData.length) {
-                    currentCard = stack.children[0];
-                    currentCard.style.transform = 'translate(0, 0) rotate(0deg)';
-                    addSwipeListeners(currentCard);
+                if (direction === 'right') {
+                    // Only open chat if it's not the first card
+                    if (currentCardIndex !== 0) {
+                        openChat(cardsData[currentCardIndex]);
+                    }
+                    moveToNextCard();
                 } else {
-                    showEndMessage();
+                    moveToNextCard();
                 }
             }, 300);
+        }
+
+        function moveToNextCard() {
+            if (currentCard) {
+                currentCard.remove();
+            }
+            currentCardIndex++;
+            
+            const stack = document.querySelector('.card-stack');
+            if (currentCardIndex < cardsData.length) {
+                currentCard = stack.children[0];
+                currentCard.style.transform = 'translate(0, 0) rotate(0deg)';
+                addSwipeListeners(currentCard);
+            } else {
+                showEndMessage();
+            }
         }
 
         function resetCardPosition() {
@@ -281,6 +339,35 @@
         function showEndMessage() {
             const stack = document.querySelector('.card-stack');
             stack.innerHTML = '<div class="end-message">No more people in your area!</div>';
+        }
+
+        function onSwipeRight() {
+            // Check if the current card is the first demo card
+            if (currentIndex === 0) {
+                // Do nothing for the demo card
+                return;
+            }
+
+            // Check if the current card has already been swiped right
+            if (swipedRightIndices.has(currentIndex)) {
+                // Move to the next card
+                currentIndex++;
+                // Ensure we don't go out of bounds
+                if (currentIndex >= cardsData.length) {
+                    currentIndex = cardsData.length - 1;
+                }
+                return;
+            }
+
+            // Mark the current card as swiped right
+            swipedRightIndices.add(currentIndex);
+
+            // Move to the next card
+            currentIndex++;
+            // Ensure we don't go out of bounds
+            if (currentIndex >= cardsData.length) {
+                currentIndex = cardsData.length - 1;
+            }
         }
 
         // Initialize the app

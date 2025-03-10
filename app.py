@@ -17,7 +17,34 @@ client = OpenAI(
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    cards = [
+        {
+            'heading': 'UncR',
+            'subheading': 'Find your perfect unc!<br>Swipe ← for No &nbsp; Swipe → for Yes',
+            'name': '',
+            'image': 'https://upload.wikimedia.org/wikipedia/commons/5/59/Empty.png',
+            'description': ''
+        },
+        {
+            'heading': '',
+            'subheading': '',
+            'name': 'Suresh',
+            'image': 'https://img.freepik.com/free-photo/indian-man-portrait-temple_53876-14535.jpg',
+            'description': 'Loves feet'
+        },
+        {
+            'heading': '',
+            'subheading': '',
+            'name': 'Niggesh',
+            'image': 'https://i0.wp.com/journals-times.com/wp-content/uploads/2023/09/Rajessh-M-Iyer-photo.png',
+            'description': 'likes little boys'
+        }
+    ]
+
+    return render_template('index.html', cards=cards)
+
+
+
 def message_ai(message):
     response = client.chat.completions.create(
         model="cognitivecomputations/dolphin3.0-mistral-24b:free",
@@ -32,6 +59,7 @@ def message_ai(message):
         max_tokens=150
     )
     return response.choices[0].message.content.strip()
+
 
 
 @app.route('/chat', methods=['POST'])

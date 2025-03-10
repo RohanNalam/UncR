@@ -162,17 +162,7 @@
     </div>
 
     <script>
-        const cardsData = [
-            {
-                heading: "UncR",
-                subheading: "Find your perfect unc!<br>Swipe ← for No &nbsp; Swipe → for Yes",
-                name: "",
-                image: "https://upload.wikimedia.org/wikipedia/commons/5/59/Empty.png",
-                description: "",
-            },
-            { heading: "", subheading: "", name: "Suresh", image: "https://img.freepik.com/free-photo/indian-man-portrait-temple_53876-14535.jpg", description: "Loves feet" },
-            { heading: "", subheading: "", name: "Niggesh", image: "https://i0.wp.com/journals-times.com/wp-content/uploads/2023/09/Rajessh-M-Iyer-photo.png?fit=500%2C664&ssl=1", description: "likes little boys" },
-        ];
+        const cardsData = JSON.parse('{{ cards|tojson|safe }}');
 
         let currentCard = null;
         let currentCardIndex = 0;

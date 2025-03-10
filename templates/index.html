@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>UncR</title>
     <style>
         * {
@@ -295,7 +295,7 @@
                 <div class="chat-messages" style="flex-grow: 1; padding: 10px; overflow-y: auto;"></div>
                 <div style="display: flex;">
                     <input type="text" class="chat-input" placeholder="Type a message..." style="flex-grow: 1; padding: 10px; border: none; border-top: 1px solid #ccc;">
-                    <button onclick="sendMessage()" style="padding: 10px; border: none; background-color: #007bff; color: white; cursor: pointer;">Send</button>
+                    <button onclick="sendMessage()" style="padding: 10px 15px; border: none; background-color: #007bff; color: white; cursor: pointer; -webkit-tap-highlight-color: transparent;">Send</button>
                 </div>
             `;
             document.body.appendChild(chatWindow);
